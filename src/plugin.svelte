@@ -1,20 +1,14 @@
 <script lang="ts">
-	import * as pckg from "../package.json";
+	import { name, version } from "../package.json";
 	import "./app.css"
-	
-	
-	interface Props {
-		// Inputs
-		doc: XMLDocument | undefined;
-		editCount: number;
-	}
+    import Launcher from "./launcher.svelte";
 
-	let { doc, editCount }: Props = $props();
+	export async function run() {
+
+	}
 </script>
 
-{#if doc}
-	<h2>Welcome to new-oscd-plugin</h2>
-{/if}
+<Launcher/>
 
-<input type="hidden" name="package-name" value={pckg.name} />
-<input type="hidden" name="package-version" value={pckg.version} />
+<input type="hidden" name="package-name" value={name} />
+<input type="hidden" name="package-version" value={version} />
