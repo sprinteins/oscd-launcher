@@ -57,15 +57,16 @@ function getPluginIcon(plugin: Plugin) {
     launcher {
         display: flex;
         justify-content: center;
-        position: relative;
         padding: 2em;
     }
 
     launcher-grid {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, 12em);
         gap: 1em;
         row-gap: 1.5em;
+        width: 100%;
+        justify-content: center;
     }
 
     plugin-item {
