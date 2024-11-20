@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
-		"preview": "vite preview --port 50713",
+		"preview": "vite preview --port 50714",
 		"build:watch": "npm run build && concurrently 'npm:_build:watch' 'npm:preview'",
 		"_build:watch": "NODE_ENV=development vite build --watch",
 		"check": "svelte-check --tsconfig ./tsconfig.json && tsc -p tsconfig.node.json",
@@ -15,14 +15,23 @@
 	"devDependencies": {
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
 		"@tsconfig/svelte": "^5.0.4",
+		"sass": "^1.81.0",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
 		"tslib": "^2.6.3",
 		"typescript": "^5.5.3",
-		"vite": "^5.4.4"
+		"vite": "^5.4.4",
+		"vite-plugin-css-injected-by-js": "^3.5.2"
 	},
 	"dependencies": {
-		"concurrently": "^8.2.2"
+		"@material/mwc-icon": "^0.27.0",
+		"@material/typography": "^14.0.0",
+		"@smui/button": "8.0.0-beta.0",
+		"@smui/icon-button": "8.0.0-beta.0",
+		"@smui/list": "8.0.0-beta.0",
+		"@smui/textfield": "8.0.0-beta.0",
+		"concurrently": "^8.2.2",
+		"svelte-material-ui": "8.0.0-beta.0"
 	},
 	"packageManager": "pnpm@9.12.1+sha512.e5a7e52a4183a02d5931057f7a0dbff9d5e9ce3161e33fa68ae392125b79282a8a8a470a51dfc8a0ed86221442eb2fb57019b0990ed24fab519bf0e1bc5ccfc4"
 }
