@@ -87,24 +87,28 @@ function getPluginIcon(plugin: Plugin) {
 <style>
     launcher {
         display: flex;
+        flex-direction: column;
         justify-content: center;
-        padding: 2em;
+        padding: 2em 6em;
+        gap: 3em;
+    }
+
+    launcher-toolbar {
+        width: 100%; 
     }
 
     launcher-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, 12em);
+        grid-template-columns: repeat(auto-fill, minmax(11em, 1fr));
         gap: 1em;
         row-gap: 1.5em;
-        width: 100%;
-        justify-content: center;
     }
 
     plugin-item {
         display: flex;
         flex-direction: column;
         gap: 1em;
-        width: 11em;
+        width: 100%;
 
         text-align: center;
     }
@@ -116,4 +120,6 @@ function getPluginIcon(plugin: Plugin) {
     :global(.mdc-button--raised.mdc-ripple-upgraded.plugin-item--button) {
         height: 5em;
     }
+
+    
 </style>
