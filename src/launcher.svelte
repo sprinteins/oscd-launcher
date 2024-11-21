@@ -75,7 +75,7 @@ function getPluginIcon(plugin: Plugin) {
             {#each filteredPlugins as plugin}
                 <plugin-item>
                     <Button variant="raised" class="plugin-item--button">
-                        <mwc-icon>{getPluginIcon(plugin)}</mwc-icon> 
+                        <mwc-icon class="plugin-item--icon">{getPluginIcon(plugin)}</mwc-icon> 
                     </Button>
                     {plugin.name}
                 </plugin-item>
@@ -107,6 +107,10 @@ function getPluginIcon(plugin: Plugin) {
         width: 11em;
 
         text-align: center;
+    }
+
+    .plugin-item--icon {
+        transform: scale(125%);
     }
 
     :global(.mdc-button--raised.mdc-ripple-upgraded.plugin-item--button) {
