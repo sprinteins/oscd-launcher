@@ -1,6 +1,7 @@
 <script lang="ts">
 import Theme from "./theme/theme.svelte";
 import Button from "@smui/button"
+import Textfield from "@smui/textfield";
 
 type PluginKind = "editor" | "menu" | "validator";
 const menuPosition = ["top", "middle", "bottom"] as const;
@@ -31,7 +32,30 @@ function storedPlugins(): Plugin[] {
 	return JSON.parse(localStorage.getItem("plugins") ?? "[]", (key, value) => value) as Plugin[];
 }
 
+let searchFilter = $state("");
+
+function filterSearchResults(plugin: Plugin, filter: string): boolean {
+	const search = filter.toLowerCase();
+
+	const foundName = plugin.name.toLowerCase().includes(search);
+	let foundAuthor = false;
+
+	if (plugin.author) {
+		foundAuthor = plugin.author.toLowerCase().includes(search);
+	}
+
+	return foundName || foundAuthor;
+}
+
+// Prevent Plugin Store itself from showing up in search results.
+function filterSelf(plugin: Plugin): boolean {
+	return plugin.name !== "Launcher" && plugin.name !== "Plugin Launcher";
+}
+
 let plugins = $state(storedPlugins());
+let filteredPlugins = $derived(plugins
+	.filter((plugin) => filterSearchResults(plugin, searchFilter))
+	.filter((plugin) => filterSelf(plugin)))
 
 function getPluginIcon(plugin: Plugin) {
     return plugin.icon || pluginIcons[plugin.kind];
@@ -40,8 +64,15 @@ function getPluginIcon(plugin: Plugin) {
 
 <Theme>
     <launcher>
+        <launcher-toolbar>
+            <Textfield
+                label={"Search"}
+                variant={"outlined"}
+                bind:value={searchFilter}
+            />
+        </launcher-toolbar>
         <launcher-grid>
-            {#each plugins as plugin}
+            {#each filteredPlugins as plugin}
                 <plugin-item>
                     <Button variant="raised" class="plugin-item--button">
                         <mwc-icon>{getPluginIcon(plugin)}</mwc-icon> 
