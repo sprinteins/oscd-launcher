@@ -70,25 +70,18 @@ function dispatchConfigurePlugin(plugin: Plugin, shouldDelete = false) {
 	launcher.dispatchEvent(event);
 }
 
-// Enables/disables plugin by toggling the "installed" property.
-function toggleOfficialPlugin(plugin: Plugin, isEnabled: boolean) {
+function enablePlugin(plugin: Plugin) {
 	const currentPlugins = storedPlugins();
 	const foundPlugin = currentPlugins.find((it) => it.name === plugin.name);
 	if (foundPlugin) {
-		foundPlugin.installed = isEnabled;
+		foundPlugin.installed = true;
 	}
 
-	plugins = currentPlugins;
-	plugin.installed = isEnabled;
+	plugins = combineAllPlugins(currentPlugins, externalPlugins);
+	plugin.installed = true;
 
 	dispatchConfigurePlugin(plugin);
-	console.log("Set toggle state for", plugin.name);
-}
-
-function configurePluginState(plugin: Plugin) {
-    if(plugin.official) {
-        toggleOfficialPlugin(plugin, !plugin.installed)
-    }
+	console.log("Enabled plugin:", plugin.name);
 }
 
 function combineAllPlugins(local: Plugin[], external: Plugin[]): Plugin[] {
@@ -162,7 +155,7 @@ function getPluginIcon(plugin: Plugin) {
         <launcher-grid>
             {#each filteredPlugins as plugin}
                 <plugin-item>
-                    <Button variant="raised" class="plugin-item--button" onclick={() => configurePluginState(plugin)}>
+                    <Button variant="raised" class="plugin-item--button" onclick={() => enablePlugin(plugin)}>
                         <mwc-icon class="plugin-item--icon">{getPluginIcon(plugin)}</mwc-icon> 
                     </Button>
                     {plugin.name}
