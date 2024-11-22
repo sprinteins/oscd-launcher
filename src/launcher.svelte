@@ -3,6 +3,8 @@ import Theme from "./theme/theme.svelte";
 import Button from "@smui/button"
 import Textfield from "@smui/textfield";
 
+// #region Plugin
+
 type PluginKind = "editor" | "menu" | "validator";
 const menuPosition = ["top", "middle", "bottom"] as const;
 type MenuPosition = (typeof menuPosition)[number];
@@ -28,9 +30,61 @@ type Plugin = {
 	official?: boolean;
 };
 
+type ConfigurePluginDetail = {
+	name: string;
+	// The API describes only 'menu' and 'editor' kinds
+	// but we still use the 'validator' too, so I just use the type PluginKind
+	kind: PluginKind;
+	config: Plugin | null;
+};
+
 function storedPlugins(): Plugin[] {
 	return JSON.parse(localStorage.getItem("plugins") ?? "[]", (key, value) => value) as Plugin[];
 }
+
+function dispatchConfigurePlugin(plugin: Plugin, shouldDelete = false) {
+	const event = new CustomEvent<ConfigurePluginDetail>(
+		"oscd-configure-plugin",
+		{
+			bubbles: true,
+			composed: true,
+			detail: {
+				name: plugin.name,
+				kind: plugin.kind,
+				config: shouldDelete ? null : plugin,
+			},
+		},
+	);
+
+	launcher.dispatchEvent(event);
+}
+
+// Enables/disables plugin by toggling the "installed" property.
+function toggleOfficialPlugin(plugin: Plugin, isEnabled: boolean) {
+	const currentPlugins = storedPlugins();
+	const foundPlugin = currentPlugins.find((it) => it.name === plugin.name);
+	if (foundPlugin) {
+		foundPlugin.installed = isEnabled;
+	}
+
+	plugins = currentPlugins;
+	plugin.installed = isEnabled;
+
+	dispatchConfigurePlugin(plugin);
+	console.log("Set toggle state for", plugin.name);
+}
+
+function configurePluginState(plugin: Plugin) {
+    if(plugin.official) {
+        toggleOfficialPlugin(plugin, !plugin.installed)
+    }
+}
+
+// #endregion Plugin
+
+// #region UI
+
+let launcher: Element;
 
 let searchFilter = $state("");
 
@@ -60,10 +114,12 @@ let filteredPlugins = $derived(plugins
 function getPluginIcon(plugin: Plugin) {
     return plugin.icon || pluginIcons[plugin.kind];
 }
+
+//#endregion UI
 </script>
 
 <Theme>
-    <launcher>
+    <launcher bind:this={launcher}>
         <launcher-toolbar>
             <Textfield
                 label={"Search"}
@@ -74,7 +130,7 @@ function getPluginIcon(plugin: Plugin) {
         <launcher-grid>
             {#each filteredPlugins as plugin}
                 <plugin-item>
-                    <Button variant="raised" class="plugin-item--button">
+                    <Button variant="raised" class="plugin-item--button" onclick={() => configurePluginState(plugin)}>
                         <mwc-icon class="plugin-item--icon">{getPluginIcon(plugin)}</mwc-icon> 
                     </Button>
                     {plugin.name}
