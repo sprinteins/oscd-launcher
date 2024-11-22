@@ -42,6 +42,17 @@ function storedPlugins(): Plugin[] {
 	return JSON.parse(localStorage.getItem("plugins") ?? "[]", (key, value) => value) as Plugin[];
 }
 
+async function fetchExternalPlugins() {
+    const url = "https://raw.githubusercontent.com/sprinteins/oscd-plugin-store/refs/heads/main/public/plugins.json";
+    const response = await fetch(url);
+    const data = await response.json();
+    externalPlugins = data.plugins;
+}
+
+let externalPlugins: Plugin[] = $state([]);
+
+fetchExternalPlugins();
+
 function dispatchConfigurePlugin(plugin: Plugin, shouldDelete = false) {
 	const event = new CustomEvent<ConfigurePluginDetail>(
 		"oscd-configure-plugin",
@@ -80,6 +91,26 @@ function configurePluginState(plugin: Plugin) {
     }
 }
 
+function combineAllPlugins(local: Plugin[], external: Plugin[]): Plugin[] {
+	const plugins = [...local];
+
+    for (const plugin of external) {
+        if (!localPlugins.some((it) => it.name === plugin.name)) {
+            plugins.push(plugin);
+        }
+    }
+
+	plugins.sort((a, b) => {
+		if (a.author && b.author && a.author !== b.author) {
+			return a.author?.localeCompare(b.author);
+		}
+
+		return a.name.localeCompare(b.name);
+	});
+
+	return plugins;
+}
+
 // #endregion Plugin
 
 // #region UI
@@ -106,7 +137,8 @@ function filterSelf(plugin: Plugin): boolean {
 	return plugin.name !== "Launcher" && plugin.name !== "Plugin Launcher";
 }
 
-let plugins = $state(storedPlugins());
+let localPlugins = $state(storedPlugins());
+let plugins = $derived(combineAllPlugins(localPlugins, externalPlugins))
 let filteredPlugins = $derived(plugins
 	.filter((plugin) => filterSearchResults(plugin, searchFilter))
 	.filter((plugin) => filterSelf(plugin)))
