@@ -43,7 +43,7 @@ function storedPlugins(): Plugin[] {
 }
 
 async function fetchExternalPlugins() {
-    const url = "https://raw.githubusercontent.com/sprinteins/oscd-plugin-store/refs/heads/main/public/plugins.json";
+    const url = "https://sprinteins.github.io/oscd-plugin-store/plugins.json";
     const response = await fetch(url);
     const data = await response.json();
     externalPlugins = data.plugins;
