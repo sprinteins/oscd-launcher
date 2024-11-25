@@ -200,7 +200,7 @@ function getPluginIcon(plugin: Plugin) {
 	plugin-content {
 		display: flex;
 		flex-direction: column;
-		gap: 1.4em;
+		gap: 1em;
 	}
 
     plugin-grid {
