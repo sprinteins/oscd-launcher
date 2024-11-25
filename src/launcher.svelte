@@ -135,6 +135,9 @@ let plugins = $derived(combineAllPlugins(localPlugins, externalPlugins))
 let filteredPlugins = $derived(plugins
 	.filter((plugin) => filterSearchResults(plugin, searchFilter))
 	.filter((plugin) => filterSelf(plugin)))
+	
+let editorPlugins = $derived(filteredPlugins.filter((it) => it.kind === "editor"));
+let menuPlugins = $derived(filteredPlugins.filter((it) => it.kind === "menu"));
 
 function getPluginIcon(plugin: Plugin) {
     return plugin.icon || pluginIcons[plugin.kind];
@@ -152,16 +155,38 @@ function getPluginIcon(plugin: Plugin) {
                 bind:value={searchFilter}
             />
         </launcher-toolbar>
-        <launcher-grid>
-            {#each filteredPlugins as plugin}
-                <plugin-item>
-                    <Button variant="raised" class="plugin-item--button" onclick={() => enablePlugin(plugin)}>
-                        <mwc-icon class="plugin-item--icon">{getPluginIcon(plugin)}</mwc-icon> 
-                    </Button>
-                    {plugin.name}
-                </plugin-item>
-            {/each}
-        </launcher-grid>
+		<plugin-content>
+			<div class="mdc-typography--headline6">Editor</div>
+			<plugin-grid>
+				{#each editorPlugins as plugin}
+				<plugin-item>
+					<Button variant="raised" class="plugin-item--button" onclick={() => enablePlugin(plugin)}>
+						<mwc-icon class="plugin-item--icon">{getPluginIcon(plugin)}</mwc-icon> 
+					</Button>
+					{plugin.name}
+				</plugin-item>
+				{/each}
+				{#if editorPlugins.length === 0}
+					<plugin-grid-text>No plugins found.</plugin-grid-text>
+				{/if}
+			</plugin-grid>
+		</plugin-content>
+		<plugin-content>
+			<div class="mdc-typography--headline6">Menu</div>
+			<plugin-grid>
+				{#each menuPlugins as plugin}
+				<plugin-item>
+					<Button variant="raised" class="plugin-item--button" onclick={() => enablePlugin(plugin)}>
+						<mwc-icon class="plugin-item--icon">{getPluginIcon(plugin)}</mwc-icon> 
+					</Button>
+					{plugin.name}
+				</plugin-item>
+				{/each}
+				{#if menuPlugins.length === 0}
+					<plugin-grid-text>No plugins found.</plugin-grid-text>
+				{/if}
+			</plugin-grid>
+		</plugin-content>
     </launcher>
 </Theme>
 
@@ -178,12 +203,22 @@ function getPluginIcon(plugin: Plugin) {
         width: 100%; 
     }
 
-    launcher-grid {
+	plugin-content {
+		display: flex;
+		flex-direction: column;
+		gap: 1em;
+	}
+
+    plugin-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(11em, 1fr));
         gap: 1em;
         row-gap: 1.5em;
     }
+
+	plugin-grid-text {
+		opacity: 60%;
+	}
 
     plugin-item {
         display: flex;
