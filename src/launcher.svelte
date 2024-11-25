@@ -166,6 +166,9 @@ function getPluginIcon(plugin: Plugin) {
 					{plugin.name}
 				</plugin-item>
 				{/each}
+				{#if editorPlugins.length === 0}
+					<plugin-grid-text>No plugins found.</plugin-grid-text>
+				{/if}
 			</plugin-grid>
 		</plugin-content>
 		<plugin-content>
@@ -179,6 +182,9 @@ function getPluginIcon(plugin: Plugin) {
 					{plugin.name}
 				</plugin-item>
 				{/each}
+				{#if editorPlugins.length === 0}
+					<plugin-grid-text>No plugins found.</plugin-grid-text>
+				{/if}
 			</plugin-grid>
 		</plugin-content>
     </launcher>
@@ -209,6 +215,10 @@ function getPluginIcon(plugin: Plugin) {
         gap: 1em;
         row-gap: 1.5em;
     }
+
+	plugin-grid-text {
+		opacity: 60%;
+	}
 
     plugin-item {
         display: flex;
