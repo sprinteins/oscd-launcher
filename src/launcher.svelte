@@ -182,7 +182,7 @@ function getPluginIcon(plugin: Plugin) {
 					{plugin.name}
 				</plugin-item>
 				{/each}
-				{#if editorPlugins.length === 0}
+				{#if menuPlugins.length === 0}
 					<plugin-grid-text>No plugins found.</plugin-grid-text>
 				{/if}
 			</plugin-grid>
