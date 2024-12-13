@@ -1,13 +1,65 @@
+
+<Theme>
+    <launcher bind:this={launcher}>
+        <launcher-toolbar>
+            <Textfield
+                label={"Search"}
+                variant={"outlined"}
+                bind:value={searchFilter}
+            />
+        </launcher-toolbar>
+		<plugin-content>
+			<div class="mdc-typography--headline6">Editor</div>
+			<plugin-grid>
+				{#each editorPlugins as plugin}
+				<plugin-item>
+					<Button variant="raised" class="plugin-item--button" onclick={() => switchToEditorPlugin(plugin)}>
+						<mwc-icon class="plugin-item--icon">{getPluginIcon(plugin)}</mwc-icon> 
+					</Button>
+					{plugin.name}
+				</plugin-item>
+				{/each}
+				{#if editorPlugins.length === 0}
+					<plugin-grid-text>No plugins found.</plugin-grid-text>
+				{/if}
+			</plugin-grid>
+		</plugin-content>
+		<plugin-content>
+			<div class="mdc-typography--headline6">Menu</div>
+			<plugin-grid>
+				{#each menuPlugins as plugin}
+				<plugin-item>
+					<Button variant="raised" class="plugin-item--button" onclick={() => runMenuPlugin(plugin)}>
+						<mwc-icon class="plugin-item--icon">{getPluginIcon(plugin)}</mwc-icon> 
+					</Button>
+					{plugin.name}
+				</plugin-item>
+				{/each}
+				{#if menuPlugins.length === 0}
+					<plugin-grid-text>No plugins found.</plugin-grid-text>
+				{/if}
+			</plugin-grid>
+		</plugin-content>
+    </launcher>
+</Theme>
+
+
 <script lang="ts">
+
 import Theme from "./theme/theme.svelte";
 import Button from "@smui/button"
 import Textfield from "@smui/textfield";
+import type { Optional } from "./util";
+import type { PluginKind, MenuPosition, ConfigurePluginDetail, OpenSCDPlugin } from "./plugin";
+
+type Props = {
+	plugins: Optional<OpenSCDPlugin[]>
+}
+const {plugins: pluginsLoaded}: Props = $props()
 
 // #region Plugin
 
-type PluginKind = "editor" | "menu" | "validator";
-const menuPosition = ["top", "middle", "bottom"] as const;
-type MenuPosition = (typeof menuPosition)[number];
+
 
 export const pluginIcons: Record<PluginKind | MenuPosition, string> = {
 	editor: 'tab',
@@ -18,28 +70,10 @@ export const pluginIcons: Record<PluginKind | MenuPosition, string> = {
 	bottom: 'play_circle',
 }
 
-type Plugin = {
-	name: string;
-	author?: string;
-	src: string;
-	icon?: string;
-	kind: PluginKind;
-	requireDoc?: boolean;
-	position?: MenuPosition;
-	installed: boolean;
-	official?: boolean;
-};
 
-type ConfigurePluginDetail = {
-	name: string;
-	// The API describes only 'menu' and 'editor' kinds
-	// but we still use the 'validator' too, so I just use the type PluginKind
-	kind: PluginKind;
-	config: Plugin | null;
-};
-
-function storedPlugins(): Plugin[] {
-	return JSON.parse(localStorage.getItem("plugins") ?? "[]", (key, value) => value) as Plugin[];
+function storedPlugins(): OpenSCDPlugin[] {
+	return pluginsLoaded ?? [];
+	return JSON.parse(localStorage.getItem("plugins") ?? "[]", (key, value) => value) as OpenSCDPlugin[];
 }
 
 async function fetchExternalPlugins() {
@@ -49,11 +83,11 @@ async function fetchExternalPlugins() {
     externalPlugins = data.plugins;
 }
 
-let externalPlugins: Plugin[] = $state([]);
+let externalPlugins: OpenSCDPlugin[] = $state([]);
 
 fetchExternalPlugins();
 
-function dispatchConfigurePlugin(plugin: Plugin, shouldDelete = false) {
+function dispatchConfigurePlugin(plugin: OpenSCDPlugin, shouldDelete = false) {
 	const event = new CustomEvent<ConfigurePluginDetail>(
 		"oscd-configure-plugin",
 		{
@@ -70,21 +104,56 @@ function dispatchConfigurePlugin(plugin: Plugin, shouldDelete = false) {
 	launcher.dispatchEvent(event);
 }
 
-function enablePlugin(plugin: Plugin) {
-	const currentPlugins = storedPlugins();
-	const foundPlugin = currentPlugins.find((it) => it.name === plugin.name);
-	if (foundPlugin) {
-		foundPlugin.installed = true;
-	}
+function enablePlugin(plugin: OpenSCDPlugin) {
+	// const {name, src} = plugin;
 
-	plugins = combineAllPlugins(currentPlugins, externalPlugins);
+	// const currentPlugins = storedPlugins();
+	// const wantedPlugin = currentPlugins.find((p) => p.name === name && p.src === src); 
+	// if (wantedPlugin) {
+	// 	wantedPlugin.installed = true;
+	// }
+
+	// plugins = combineAllPlugins(currentPlugins, externalPlugins);
 	plugin.installed = true;
 
 	dispatchConfigurePlugin(plugin);
 	console.log("Enabled plugin:", plugin.name);
 }
 
-function combineAllPlugins(local: Plugin[], external: Plugin[]): Plugin[] {
+function switchToEditorPlugin(plugin: OpenSCDPlugin){
+	enablePlugin(plugin); // ensure plugin is enabled
+	dispatchActivateEditorTab(plugin.name, plugin.src);
+}
+
+function dispatchActivateEditorTab(name: string, src: string){
+	const event = new CustomEvent("oscd-activate-editor", {
+		bubbles: true,
+		composed: true,
+		detail: {name, src}
+	});
+
+	launcher.dispatchEvent(event);
+}
+
+function runMenuPlugin(plugin: OpenSCDPlugin){
+	enablePlugin(plugin); // ensure plugin is enabled
+	dispatchRunMenu(plugin.name);
+}
+
+
+function dispatchRunMenu(name: string){
+	const event = new CustomEvent("oscd-run-menu", {
+		bubbles: true,
+		composed: true,
+		detail: {name}
+	});
+
+	launcher.dispatchEvent(event);
+}
+
+
+
+function combineAllPlugins(local: OpenSCDPlugin[], external: OpenSCDPlugin[]): OpenSCDPlugin[] {
 	const plugins = [...local];
 
     for (const plugin of external) {
@@ -112,7 +181,7 @@ let launcher: Element;
 
 let searchFilter = $state("");
 
-function filterSearchResults(plugin: Plugin, filter: string): boolean {
+function filterSearchResults(plugin: OpenSCDPlugin, filter: string): boolean {
 	const search = filter.toLowerCase();
 
 	const foundName = plugin.name.toLowerCase().includes(search);
@@ -126,7 +195,7 @@ function filterSearchResults(plugin: Plugin, filter: string): boolean {
 }
 
 // Prevent Plugin Store itself from showing up in search results.
-function filterSelf(plugin: Plugin): boolean {
+function filterSelf(plugin: OpenSCDPlugin): boolean {
 	return plugin.name !== "Launcher" && plugin.name !== "Plugin Launcher";
 }
 
@@ -139,56 +208,13 @@ let filteredPlugins = $derived(plugins
 let editorPlugins = $derived(filteredPlugins.filter((it) => it.kind === "editor"));
 let menuPlugins = $derived(filteredPlugins.filter((it) => it.kind === "menu"));
 
-function getPluginIcon(plugin: Plugin) {
+function getPluginIcon(plugin: OpenSCDPlugin) {
     return plugin.icon || pluginIcons[plugin.kind];
 }
 
 //#endregion UI
 </script>
 
-<Theme>
-    <launcher bind:this={launcher}>
-        <launcher-toolbar>
-            <Textfield
-                label={"Search"}
-                variant={"outlined"}
-                bind:value={searchFilter}
-            />
-        </launcher-toolbar>
-		<plugin-content>
-			<div class="mdc-typography--headline6">Editor</div>
-			<plugin-grid>
-				{#each editorPlugins as plugin}
-				<plugin-item>
-					<Button variant="raised" class="plugin-item--button" onclick={() => enablePlugin(plugin)}>
-						<mwc-icon class="plugin-item--icon">{getPluginIcon(plugin)}</mwc-icon> 
-					</Button>
-					{plugin.name}
-				</plugin-item>
-				{/each}
-				{#if editorPlugins.length === 0}
-					<plugin-grid-text>No plugins found.</plugin-grid-text>
-				{/if}
-			</plugin-grid>
-		</plugin-content>
-		<plugin-content>
-			<div class="mdc-typography--headline6">Menu</div>
-			<plugin-grid>
-				{#each menuPlugins as plugin}
-				<plugin-item>
-					<Button variant="raised" class="plugin-item--button" onclick={() => enablePlugin(plugin)}>
-						<mwc-icon class="plugin-item--icon">{getPluginIcon(plugin)}</mwc-icon> 
-					</Button>
-					{plugin.name}
-				</plugin-item>
-				{/each}
-				{#if menuPlugins.length === 0}
-					<plugin-grid-text>No plugins found.</plugin-grid-text>
-				{/if}
-			</plugin-grid>
-		</plugin-content>
-    </launcher>
-</Theme>
 
 <style>
     launcher {
