@@ -55,11 +55,12 @@ import type { PluginKind, MenuPosition, ConfigurePluginDetail, OpenSCDPlugin } f
 type Props = {
 	plugins: Optional<OpenSCDPlugin[]>
 }
-const {plugins: pluginsLoaded}: Props = $props()
+const {plugins: loadedPlugins}: Props = $props()
 
 // #region Plugin
 
-
+let externalPlugins: OpenSCDPlugin[] = $state([]);
+loadExternalPlugins();
 
 export const pluginIcons: Record<PluginKind | MenuPosition, string> = {
 	editor: 'tab',
@@ -72,20 +73,33 @@ export const pluginIcons: Record<PluginKind | MenuPosition, string> = {
 
 
 function storedPlugins(): OpenSCDPlugin[] {
-	return pluginsLoaded ?? [];
+	return loadedPlugins ?? [];
 	return JSON.parse(localStorage.getItem("plugins") ?? "[]", (key, value) => value) as OpenSCDPlugin[];
 }
 
-async function fetchExternalPlugins() {
+async function loadExternalPlugins() {
     const url = "https://sprinteins.github.io/oscd-plugin-store/plugins.json";
     const response = await fetch(url);
     const data = await response.json();
     externalPlugins = data.plugins;
 }
 
-let externalPlugins: OpenSCDPlugin[] = $state([]);
 
-fetchExternalPlugins();
+function enablePlugin(plugin: OpenSCDPlugin) {
+	// const {name, src} = plugin;
+
+	// const currentPlugins = storedPlugins();
+	// const wantedPlugin = currentPlugins.find((p) => p.name === name && p.src === src); 
+	// if (wantedPlugin) {
+	// 	wantedPlugin.installed = true;
+	// }
+
+	// plugins = combineAllPlugins(currentPlugins, externalPlugins);
+	plugin.installed = true;
+
+	dispatchConfigurePlugin(plugin);
+	console.log("Enabled plugin:", plugin.name);
+}
 
 function dispatchConfigurePlugin(plugin: OpenSCDPlugin, shouldDelete = false) {
 	const event = new CustomEvent<ConfigurePluginDetail>(
@@ -104,21 +118,7 @@ function dispatchConfigurePlugin(plugin: OpenSCDPlugin, shouldDelete = false) {
 	launcher.dispatchEvent(event);
 }
 
-function enablePlugin(plugin: OpenSCDPlugin) {
-	// const {name, src} = plugin;
 
-	// const currentPlugins = storedPlugins();
-	// const wantedPlugin = currentPlugins.find((p) => p.name === name && p.src === src); 
-	// if (wantedPlugin) {
-	// 	wantedPlugin.installed = true;
-	// }
-
-	// plugins = combineAllPlugins(currentPlugins, externalPlugins);
-	plugin.installed = true;
-
-	dispatchConfigurePlugin(plugin);
-	console.log("Enabled plugin:", plugin.name);
-}
 
 function switchToEditorPlugin(plugin: OpenSCDPlugin){
 	enablePlugin(plugin); // ensure plugin is enabled
@@ -178,8 +178,15 @@ function combineAllPlugins(local: OpenSCDPlugin[], external: OpenSCDPlugin[]): O
 // #region UI
 
 let launcher: Element;
-
 let searchFilter = $state("");
+let localPlugins = $state(storedPlugins());
+let plugins = $derived(combineAllPlugins(localPlugins, externalPlugins))
+let filteredPlugins = $derived(
+	plugins.filter((plugin) => filterSearchResults(plugin, searchFilter))
+	.filter((plugin) => filterSelf(plugin)))
+	
+let editorPlugins = $derived(filteredPlugins.filter((it) => it.kind === "editor"));
+let menuPlugins = $derived(filteredPlugins.filter((it) => it.kind === "menu"));
 
 function filterSearchResults(plugin: OpenSCDPlugin, filter: string): boolean {
 	const search = filter.toLowerCase();
@@ -198,15 +205,6 @@ function filterSearchResults(plugin: OpenSCDPlugin, filter: string): boolean {
 function filterSelf(plugin: OpenSCDPlugin): boolean {
 	return plugin.name !== "Launcher" && plugin.name !== "Plugin Launcher";
 }
-
-let localPlugins = $state(storedPlugins());
-let plugins = $derived(combineAllPlugins(localPlugins, externalPlugins))
-let filteredPlugins = $derived(plugins
-	.filter((plugin) => filterSearchResults(plugin, searchFilter))
-	.filter((plugin) => filterSelf(plugin)))
-	
-let editorPlugins = $derived(filteredPlugins.filter((it) => it.kind === "editor"));
-let menuPlugins = $derived(filteredPlugins.filter((it) => it.kind === "menu"));
 
 function getPluginIcon(plugin: OpenSCDPlugin) {
     return plugin.icon || pluginIcons[plugin.kind];

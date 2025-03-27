@@ -20,6 +20,10 @@ export default defineConfig({
 	server: {
 		port: 54187,
 	},
+	preview:{
+		port: 54187,
+		cors: true,
+	},
 	build: {
 		lib: {
 			entry:   "src/plugin.svelte.ts",
