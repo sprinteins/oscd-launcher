@@ -95,7 +95,12 @@ function enablePlugin(plugin: OpenSCDPlugin) {
 	// }
 
 	// plugins = combineAllPlugins(currentPlugins, externalPlugins);
+	if (plugin.installed && plugin.active) {
+		return;
+	}
+
 	plugin.installed = true;
+	plugin.active = true;
 
 	dispatchConfigurePlugin(plugin);
 	console.log("Enabled plugin:", plugin.name);
@@ -115,14 +120,17 @@ function dispatchConfigurePlugin(plugin: OpenSCDPlugin, shouldDelete = false) {
 		},
 	);
 
-	launcher.dispatchEvent(event);
+	const host = getHost();
+	host.dispatchEvent(event);
 }
 
 
 
 function switchToEditorPlugin(plugin: OpenSCDPlugin){
 	enablePlugin(plugin); // ensure plugin is enabled
-	dispatchActivateEditorTab(plugin.name, plugin.src);
+
+	// We need a timeout here, so open scd has time to enable the plugin before opening it
+	setTimeout(() => dispatchActivateEditorTab(plugin.name, plugin.src), 0);
 }
 
 function dispatchActivateEditorTab(name: string, src: string){
@@ -132,7 +140,8 @@ function dispatchActivateEditorTab(name: string, src: string){
 		detail: {name, src}
 	});
 
-	launcher.dispatchEvent(event);
+	const host = getHost();
+	host.dispatchEvent(event);
 }
 
 function runMenuPlugin(plugin: OpenSCDPlugin){
@@ -148,7 +157,14 @@ function dispatchRunMenu(name: string){
 		detail: {name}
 	});
 
-	launcher.dispatchEvent(event);
+	const host = getHost();
+	host.dispatchEvent(event);
+}
+
+// the launcher element might be replaced between dispatching multiple events, so later events are lost
+// to prevent this we use its parent
+function getHost(): Element {
+	return launcher.parentElement!;
 }
 
 

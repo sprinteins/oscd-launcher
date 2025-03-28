@@ -9,6 +9,7 @@ export type OpenSCDPlugin = {
 	position?: MenuPosition;
 	installed: boolean;
 	official?: boolean;
+	active?: boolean;
 };
 
 export type ConfigurePluginDetail = {
