@@ -10,8 +10,6 @@
 	}
 	const {plugins}: Props = $props()
 
-	$effect( () => console.log("Launcher", {plugins:plugins?.map(p => ({name:p.name, src:p.src}) )}) )
-
 </script>
 
 <Launcher {plugins}/>

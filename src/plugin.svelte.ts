@@ -1,5 +1,5 @@
 import Plugin from './plugin.svelte'
-import { mount } from "svelte";
+import { mount, unmount } from "svelte";
 import { name } from "../package.json"
 import type { OpenSCDPlugin } from './plugin';
 
@@ -23,6 +23,12 @@ export default class NewOSCDPlugin extends HTMLElement {
 		style.innerHTML = globalThis.pluginStyle[name]
 		this.shadowRoot.appendChild(style)
 		
+	}
+
+	disconnectedCallback() {
+		if (this.plugin) {
+			unmount(this.plugin);
+		}
 	}
 
 	private _plugins?: OpenSCDPlugin[] = []
