@@ -86,15 +86,6 @@ async function loadExternalPlugins() {
 
 
 function enablePlugin(plugin: OpenSCDPlugin) {
-	// const {name, src} = plugin;
-
-	// const currentPlugins = storedPlugins();
-	// const wantedPlugin = currentPlugins.find((p) => p.name === name && p.src === src); 
-	// if (wantedPlugin) {
-	// 	wantedPlugin.installed = true;
-	// }
-
-	// plugins = combineAllPlugins(currentPlugins, externalPlugins);
 	if (plugin.installed && plugin.active) {
 		return;
 	}
@@ -103,7 +94,6 @@ function enablePlugin(plugin: OpenSCDPlugin) {
 	plugin.active = true;
 
 	dispatchConfigurePlugin(plugin);
-	console.log("Enabled plugin:", plugin.name);
 }
 
 function dispatchConfigurePlugin(plugin: OpenSCDPlugin, shouldDelete = false) {

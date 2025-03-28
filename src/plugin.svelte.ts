@@ -33,16 +33,13 @@ export default class NewOSCDPlugin extends HTMLElement {
 
 	private _plugins?: OpenSCDPlugin[] = []
 	public set plugins(newPlugins: OpenSCDPlugin[]){
-		console.log('set plugins', {newPlugins})
 		this.props.plugins = newPlugins
 	}
 
 	public set locale(newLocale: string){
-		console.log('set locale', newLocale)
 	}
 	
 	public set doc(newDoc: string){
-		console.log('set doc', newDoc)
 	}
 
 }
